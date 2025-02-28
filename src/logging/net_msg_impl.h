@@ -9,6 +9,14 @@ void qLogger::processRequestLog(Peer* peer, RequestResponseHeader* header)
 {
 #if ENABLED_LOGGING
     RequestLog* request = header->getPayload<RequestLog>();
+#if !defined(NDEBUG) && !defined(NO_UEFI)
+    CHAR16 dbgMsgBuf[300];
+    setText(dbgMsgBuf, L"processRequestLog(): fromID=");
+    appendNumber(dbgMsgBuf, request->fromID, FALSE);
+    appendText(dbgMsgBuf, L", toID=");
+    appendNumber(dbgMsgBuf, request->toID, FALSE);
+    addDebugMessage(dbgMsgBuf);
+#endif
     if (request->passcode[0] == logReaderPasscodes[0]
         && request->passcode[1] == logReaderPasscodes[1]
         && request->passcode[2] == logReaderPasscodes[2]
@@ -35,6 +43,17 @@ void qLogger::processRequestLog(Peer* peer, RequestResponseHeader* header)
                 }
                 // first packet: from startID to end of buffer IS SENT BELOW
                 // second packet: from start buffer to endID IS NOT SENT FROM HERE, but requested by client later
+
+#if !defined(NDEBUG) && !defined(NO_UEFI)
+                addDebugMessage(L"processRequestLog() round buffer case: only send subset of requested IDs");
+                setText(dbgMsgBuf, L"startIdOffset=");
+                appendNumber(dbgMsgBuf, startIdBufferRange.startIndex, TRUE);
+                appendText(dbgMsgBuf, L", endIdOffset=");
+                appendNumber(dbgMsgBuf, endIdBufferRange.startIndex, TRUE);
+                appendText(dbgMsgBuf, L", endIdLength=");
+                appendNumber(dbgMsgBuf, endIdBufferRange.length, TRUE);
+                addDebugMessage(dbgMsgBuf);
+#endif
             }
 
             long long startFrom = startIdBufferRange.startIndex;
@@ -42,6 +61,13 @@ void qLogger::processRequestLog(Peer* peer, RequestResponseHeader* header)
             if (length > RequestResponseHeader::max_size)
             {
                 unsigned long long toID = request->toID;
+#if !defined(NDEBUG) && !defined(NO_UEFI)
+                addDebugMessage(L"processRequestLog() too long message of ");
+                appendNumber(dbgMsgBuf, length, TRUE);
+                setText(dbgMsgBuf, L" bytes starting at offset ");
+                appendNumber(dbgMsgBuf, startFrom, TRUE);
+                addDebugMessage(dbgMsgBuf);
+#endif
                 length -= endIdBufferRange.length;
                 while (length > RequestResponseHeader::max_size)
                 {
@@ -51,6 +77,13 @@ void qLogger::processRequestLog(Peer* peer, RequestResponseHeader* header)
                     length -= endIdBufferRange.length;
                 }
             }
+#if !defined(NDEBUG) && !defined(NO_UEFI)
+            addDebugMessage(L"processRequestLog() sending ");
+            appendNumber(dbgMsgBuf, length, TRUE);
+            setText(dbgMsgBuf, L" bytes starting at offset ");
+            appendNumber(dbgMsgBuf, startFrom, TRUE);
+            addDebugMessage(dbgMsgBuf);
+#endif
             enqueueResponse(peer, (unsigned int)(length), RespondLog::type, header->dejavu(), logBuffer + startFrom);
         }
         else
