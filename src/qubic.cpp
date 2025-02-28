@@ -338,6 +338,7 @@ static void logToConsole(const CHAR16* message)
                                 || system.tick - system.initialTick < 3
                                 || system.tick % 10 == 0
                                 || misalignedState == 1
+                                || foceLogToConsoleAsAddDebugMessage
         ;
     if (logAsDebugMessage)
         addDebugMessage(timestampedMessage);
@@ -6024,6 +6025,43 @@ static void logHealthStatus()
     appendText(message, L" | max processors waiting ");
     appendNumber(message, contractLocalsStackLockWaitingCountMax, TRUE);
     logToConsole(message);
+
+    setText(message, L"Connections:");
+    for (int i = 0; i < NUMBER_OF_OUTGOING_CONNECTIONS + NUMBER_OF_INCOMING_CONNECTIONS; ++i)
+    {
+        unsigned long long connectionStatusIndicator = (unsigned long long)peers[i].tcp4Protocol;
+        if (connectionStatusIndicator == 0)
+        {
+            appendText(message, L" [unused]");
+        }
+        else if (connectionStatusIndicator == 1)
+        {
+            ASSERT(peers[i].isConnectingAccepting);
+            appendText(message, L" [accepting]");
+        }
+        else
+        {
+            appendText(message, L" [");
+            appendIPv4Address(message, peers[i].address);
+            appendText(message, L":");
+            appendText(message, peers[i].isIncommingConnection ? L"i" : L"o");
+            if (peers[i].isClosing)
+            {
+                appendText(message, L"c");
+            }
+            if (peers[i].isReceiving)
+            {
+                appendText(message, L"r");
+            }
+            if (peers[i].isTransmitting)
+            {
+                appendText(message, L"t");
+                appendNumber(message, peers[i].dataToTransmitSize, FALSE);
+            }
+            appendText(message, L"]");
+        }
+    }
+    logToConsole(message);
 }
 
 static void processKeyPresses()
@@ -6043,6 +6081,8 @@ static void processKeyPresses()
         */
         case 0x0C:
         {
+            foceLogToConsoleAsAddDebugMessage = true;
+
             setText(message, L"Qubic ");
             appendQubicVersion(message);
             appendText(message, L".");
@@ -6182,6 +6222,8 @@ static void processKeyPresses()
             appendNumber(message, QPI::div(K12MeasurementsSum, K12MeasurementsCount), TRUE);
             appendText(message, L" ticks.");
             logToConsole(message);
+
+            foceLogToConsoleAsAddDebugMessage = false;
         }
         break;
 
