@@ -60,7 +60,8 @@ void qLogger::processRequestLog(Peer* peer, RequestResponseHeader* header)
 
             long long startFrom = startIdBufferRange.startIndex;
             long long length = endIdBufferRange.length + endIdBufferRange.startIndex - startFrom;
-            if (length > RequestResponseHeader::max_size)
+            constexpr long long maxPayloadSize = RequestResponseHeader::max_size - sizeof(sizeof(RequestResponseHeader));
+            if (length > maxPayloadSize)
             {
 #if !defined(NDEBUG) && !defined(NO_UEFI)
                 setText(dbgMsgBuf, L"processRequestLog() too long message of ");
@@ -70,7 +71,7 @@ void qLogger::processRequestLog(Peer* peer, RequestResponseHeader* header)
                 addDebugMessage(dbgMsgBuf);
 #endif
                 length -= endIdBufferRange.length;
-                while (length > RequestResponseHeader::max_size)
+                while (length > maxPayloadSize)
                 {
                     ASSERT(toID > request->fromID);
                     --toID;
