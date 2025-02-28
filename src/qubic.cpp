@@ -6030,16 +6030,7 @@ static void logHealthStatus()
     for (int i = 0; i < NUMBER_OF_OUTGOING_CONNECTIONS + NUMBER_OF_INCOMING_CONNECTIONS; ++i)
     {
         unsigned long long connectionStatusIndicator = (unsigned long long)peers[i].tcp4Protocol;
-        if (connectionStatusIndicator == 0)
-        {
-            appendText(message, L" [unused]");
-        }
-        else if (connectionStatusIndicator == 1)
-        {
-            ASSERT(peers[i].isConnectingAccepting);
-            appendText(message, L" [accepting]");
-        }
-        else
+        if (connectionStatusIndicator > 1)
         {
             appendText(message, L" [");
             appendIPv4Address(message, peers[i].address);
