@@ -27,17 +27,19 @@ void qLogger::processRequestLog(Peer* peer, RequestResponseHeader* header)
         if (startIdBufferRange.startIndex != -1 && startIdBufferRange.length != -1
             && endIdBufferRange.startIndex != -1 && endIdBufferRange.length != -1)
         {
+            unsigned long long toID = request->toID;
             if (endIdBufferRange.startIndex < startIdBufferRange.startIndex)
             {
                 // round buffer case, only response first packet - let the client figure out and request the rest
-                for (unsigned long long i = request->fromID; i <= request->toID; i++)
+                for (unsigned long long i = request->fromID + 1; i <= request->toID; i++)
                 {
                     BlobInfo iBufferRange = logBuf.getBlobInfo(i);
                     ASSERT(iBufferRange.startIndex >= 0);
                     ASSERT(iBufferRange.length >= 0);
                     if (iBufferRange.startIndex < startIdBufferRange.startIndex)
                     {
-                        endIdBufferRange = logBuf.getBlobInfo(i - 1);
+                        toID = i - 1;
+                        endIdBufferRange = logBuf.getBlobInfo(toID);
                         break;
                     }
                 }
@@ -60,7 +62,6 @@ void qLogger::processRequestLog(Peer* peer, RequestResponseHeader* header)
             long long length = endIdBufferRange.length + endIdBufferRange.startIndex - startFrom;
             if (length > RequestResponseHeader::max_size)
             {
-                unsigned long long toID = request->toID;
 #if !defined(NDEBUG) && !defined(NO_UEFI)
                 addDebugMessage(L"processRequestLog() too long message of ");
                 appendNumber(dbgMsgBuf, length, TRUE);
