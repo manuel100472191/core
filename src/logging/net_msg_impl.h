@@ -63,9 +63,9 @@ void qLogger::processRequestLog(Peer* peer, RequestResponseHeader* header)
             if (length > RequestResponseHeader::max_size)
             {
 #if !defined(NDEBUG) && !defined(NO_UEFI)
-                addDebugMessage(L"processRequestLog() too long message of ");
+                setText(dbgMsgBuf, L"processRequestLog() too long message of ");
                 appendNumber(dbgMsgBuf, length, TRUE);
-                setText(dbgMsgBuf, L" bytes starting at offset ");
+                appendText(dbgMsgBuf, L" bytes starting at offset ");
                 appendNumber(dbgMsgBuf, startFrom, TRUE);
                 addDebugMessage(dbgMsgBuf);
 #endif
@@ -79,9 +79,9 @@ void qLogger::processRequestLog(Peer* peer, RequestResponseHeader* header)
                 }
             }
 #if !defined(NDEBUG) && !defined(NO_UEFI)
-            addDebugMessage(L"processRequestLog() sending ");
+            setText(dbgMsgBuf, L"processRequestLog() sending ");
             appendNumber(dbgMsgBuf, length, TRUE);
-            setText(dbgMsgBuf, L" bytes starting at offset ");
+            appendText(dbgMsgBuf, L" bytes starting at offset ");
             appendNumber(dbgMsgBuf, startFrom, TRUE);
             addDebugMessage(dbgMsgBuf);
 #endif
