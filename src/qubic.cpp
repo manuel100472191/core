@@ -6694,18 +6694,15 @@ EFI_STATUS efi_main(EFI_HANDLE imageHandle, EFI_SYSTEM_TABLE* systemTable)
                 }*/
                 peerTcp4Protocol->Poll(peerTcp4Protocol);
 
-                addDebugMessage(L"m1");
-                printDebugMessages();
+                outputStringToConsole(L"m1\r\n");
 
                 for (unsigned int i = 0; i < NUMBER_OF_OUTGOING_CONNECTIONS + NUMBER_OF_INCOMING_CONNECTIONS; i++)
                 {
-                    addDebugMessage(L"m1.1");
-                    printDebugMessages();
+                    outputStringToConsole(L"m1.1\r\n");
                     // handle new connections
                     if (peerConnectionNewlyEstablished(i))
                     {
-                        addDebugMessage(L"m1.2");
-                        printDebugMessages();
+                        outputStringToConsole(L"m1.2\r\n");
                         // new connection established:
                         // prepare and send ExchangePublicPeers message
                         ExchangePublicPeers* request = (ExchangePublicPeers*)&peers[i].dataToTransmit[sizeof(RequestResponseHeader)];
@@ -6740,8 +6737,7 @@ EFI_STATUS efi_main(EFI_HANDLE imageHandle, EFI_SYSTEM_TABLE* systemTable)
                                 }
                             }
                         }
-                        addDebugMessage(L"m1.3");
-                        printDebugMessages();
+                        outputStringToConsole(L"m1.3\r\n");
 
                         RequestResponseHeader* requestHeader = (RequestResponseHeader*)peers[i].dataToTransmit;
                         requestHeader->setSize<sizeof(RequestResponseHeader) + sizeof(ExchangePublicPeers)>();
@@ -6759,26 +6755,22 @@ EFI_STATUS efi_main(EFI_HANDLE imageHandle, EFI_SYSTEM_TABLE* systemTable)
                             peers[i].dataToTransmitSize += requestedComputors.header.size();
                             _InterlockedIncrement64(&numberOfDisseminatedRequests);
                         }
-                        addDebugMessage(L"m1.4");
-                        printDebugMessages();
+                        outputStringToConsole(L"m1.4\r\n");
                     }
                 }
-                addDebugMessage(L"m2");
-                printDebugMessages();
+                outputStringToConsole(L"m2\r\n");
                 for (unsigned int i = 0; i < NUMBER_OF_OUTGOING_CONNECTIONS + NUMBER_OF_INCOMING_CONNECTIONS; i++)
                 {
                     // receive and transmit on active connections
                     peerReceiveAndTransmit(i, salt);
                 }
-                addDebugMessage(L"m3");
-                printDebugMessages();
+                outputStringToConsole(L"m3\r\n");
                 for (unsigned int i = 0; i < NUMBER_OF_OUTGOING_CONNECTIONS + NUMBER_OF_INCOMING_CONNECTIONS; i++)
                 {
                     // reconnect if this peer slot has no active connection
                     peerReconnectIfInactive(i, PORT);
                 }
-                addDebugMessage(L"m4");
-                printDebugMessages();
+                outputStringToConsole(L"m4\r\n");
 
                 if (curTimeTick - systemDataSavingTick >= SYSTEM_DATA_SAVING_PERIOD * frequency / 1000)
                 {
