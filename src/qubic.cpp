@@ -6698,7 +6698,7 @@ EFI_STATUS efi_main(EFI_HANDLE imageHandle, EFI_SYSTEM_TABLE* systemTable)
 
                 for (unsigned int i = 0; i < NUMBER_OF_OUTGOING_CONNECTIONS + NUMBER_OF_INCOMING_CONNECTIONS; i++)
                 {
-                    outputStringToConsole(L"m1.1\r\n");
+                    //outputStringToConsole(L"m1.1\r\n");
                     // handle new connections
                     if (peerConnectionNewlyEstablished(i))
                     {
@@ -6758,13 +6758,13 @@ EFI_STATUS efi_main(EFI_HANDLE imageHandle, EFI_SYSTEM_TABLE* systemTable)
                         outputStringToConsole(L"m1.4\r\n");
                     }
                 }
-                outputStringToConsole(L"m2\r\n");
+                //outputStringToConsole(L"m2\r\n");
                 for (unsigned int i = 0; i < NUMBER_OF_OUTGOING_CONNECTIONS + NUMBER_OF_INCOMING_CONNECTIONS; i++)
                 {
                     // receive and transmit on active connections
                     peerReceiveAndTransmit(i, salt);
                 }
-                outputStringToConsole(L"m3\r\n");
+                //outputStringToConsole(L"m3\r\n");
                 for (unsigned int i = 0; i < NUMBER_OF_OUTGOING_CONNECTIONS + NUMBER_OF_INCOMING_CONNECTIONS; i++)
                 {
                     // reconnect if this peer slot has no active connection
