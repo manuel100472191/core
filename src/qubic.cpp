@@ -2491,7 +2491,7 @@ static void processTick(unsigned long long processorNumber)
     getUniverseDigest(etalonTick.saltedUniverseDigest);
     getComputerDigest(etalonTick.saltedComputerDigest);
 
-#ifndef NDEBUG
+#if 0 //ndef NDEBUG
     CHAR16 dbgMsg[200];
 #endif
 
@@ -2539,7 +2539,7 @@ static void processTick(unsigned long long processorNumber)
                         if (pendingTransaction->tick == system.tick + TICK_TRANSACTIONS_PUBLICATION_OFFSET)
                         {
                             ASSERT(pendingTransaction->checkValidity());
-#ifndef NDEBUG
+#if 0 // ndef NDEBUG
                             setText(dbgMsg, L"add to broadcastedFutureTickData: comp tx for tick ");
                             appendNumber(dbgMsg, pendingTransaction->tick, FALSE);
                             appendText(dbgMsg, L" by entity ");
@@ -2576,7 +2576,7 @@ static void processTick(unsigned long long processorNumber)
                         const Transaction* pendingTransaction = ((Transaction*)&entityPendingTransactions[entityPendingTransactionIndices[index] * MAX_TRANSACTION_SIZE]);
                         if (pendingTransaction->tick == system.tick + TICK_TRANSACTIONS_PUBLICATION_OFFSET)
                         {
-#ifndef NDEBUG
+#if 0 //ndef NDEBUG
                             setText(dbgMsg, L"add to broadcastedFutureTickData: entity tx for tick ");
                             appendNumber(dbgMsg, pendingTransaction->tick, FALSE);
                             appendText(dbgMsg, L" by entity ");
@@ -4426,7 +4426,7 @@ static void prepareNextTickTransactions()
         }
     }
 
-#ifndef NDEBUG
+#if 0//ndef NDEBUG
     CHAR16 dbgMsg[200];
 #endif
 
@@ -4438,7 +4438,7 @@ static void prepareNextTickTransactions()
             Transaction* pendingTransaction = (Transaction*)&computorPendingTransactions[i * MAX_TRANSACTION_SIZE];
             if (pendingTransaction->tick == nextTick)
             {
-#ifndef NDEBUG
+#if 0 //ndef NDEBUG
                 setText(dbgMsg, L"prepareNextTickTransactions(): comp tx for tick ");
                 appendNumber(dbgMsg, pendingTransaction->tick, FALSE);
                 appendText(dbgMsg, L" by entity ");
@@ -4486,7 +4486,7 @@ static void prepareNextTickTransactions()
             Transaction* pendingTransaction = (Transaction*)&entityPendingTransactions[i * MAX_TRANSACTION_SIZE];
             if (pendingTransaction->tick == nextTick)
             {
-#ifndef NDEBUG
+#if 0 //ndef NDEBUG
                 setText(dbgMsg, L"prepareNextTickTransactions(): entity tx for tick ");
                 appendNumber(dbgMsg, pendingTransaction->tick, FALSE);
                 appendText(dbgMsg, L" by entity ");

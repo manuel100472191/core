@@ -601,7 +601,7 @@ static void peerReceiveAndTransmit(unsigned int i, unsigned int salt)
                                         ASSERT(requestQueueBufferHead < REQUEST_QUEUE_BUFFER_SIZE);
                                         ASSERT(requestQueueBufferHead + requestResponseHeader->size() < REQUEST_QUEUE_BUFFER_SIZE);
 
-#ifndef NDEBUG
+#if 0//ndef NDEBUG
                                         if (requestResponseHeader->type() == BROADCAST_TRANSACTION)
                                         {
                                             addDebugMessage(L"Received tx message");
