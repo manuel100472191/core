@@ -2491,6 +2491,10 @@ static void processTick(unsigned long long processorNumber)
     getUniverseDigest(etalonTick.saltedUniverseDigest);
     getComputerDigest(etalonTick.saltedComputerDigest);
 
+#ifndef NDEBUG
+    CHAR16 dbgMsg[200];
+#endif
+
     // If node is MAIN and has ID of tickleader for system.tick + TICK_TRANSACTIONS_PUBLICATION_OFFSET,
     // prepare tickData and enqueue it
     for (unsigned int i = 0; i < numberOfOwnComputorIndices; i++)
@@ -2535,6 +2539,13 @@ static void processTick(unsigned long long processorNumber)
                         if (pendingTransaction->tick == system.tick + TICK_TRANSACTIONS_PUBLICATION_OFFSET)
                         {
                             ASSERT(pendingTransaction->checkValidity());
+#ifndef NDEBUG
+                            setText(dbgMsg, L"add to broadcastedFutureTickData: comp tx for tick ");
+                            appendNumber(dbgMsg, pendingTransaction->tick, FALSE);
+                            appendText(dbgMsg, L" by entity ");
+                            appendNumber(dbgMsg, pendingTransaction->sourcePublicKey.u64._0, FALSE);
+                            addDebugMessage(dbgMsg);
+#endif
                             const unsigned int transactionSize = pendingTransaction->totalSize();
                             if (ts.nextTickTransactionOffset + transactionSize <= ts.tickTransactions.storageSpaceCurrentEpoch)
                             {
@@ -2565,6 +2576,13 @@ static void processTick(unsigned long long processorNumber)
                         const Transaction* pendingTransaction = ((Transaction*)&entityPendingTransactions[entityPendingTransactionIndices[index] * MAX_TRANSACTION_SIZE]);
                         if (pendingTransaction->tick == system.tick + TICK_TRANSACTIONS_PUBLICATION_OFFSET)
                         {
+#ifndef NDEBUG
+                            setText(dbgMsg, L"add to broadcastedFutureTickData: entity tx for tick ");
+                            appendNumber(dbgMsg, pendingTransaction->tick, FALSE);
+                            appendText(dbgMsg, L" by entity ");
+                            appendNumber(dbgMsg, pendingTransaction->sourcePublicKey.u64._0, FALSE);
+                            addDebugMessage(dbgMsg);
+#endif
                             ASSERT(pendingTransaction->checkValidity());
                             const unsigned int transactionSize = pendingTransaction->totalSize();
                             if (ts.nextTickTransactionOffset + transactionSize <= ts.tickTransactions.storageSpaceCurrentEpoch)
@@ -4408,6 +4426,10 @@ static void prepareNextTickTransactions()
         }
     }
 
+#ifndef NDEBUG
+    CHAR16 dbgMsg[200];
+#endif
+
     if (numberOfKnownNextTickTransactions != numberOfNextTickTransactions)
     {
         // Checks if any of the missing transactions is available in the computorPendingTransaction and remove unknownTransaction flag if found
@@ -4416,6 +4438,14 @@ static void prepareNextTickTransactions()
             Transaction* pendingTransaction = (Transaction*)&computorPendingTransactions[i * MAX_TRANSACTION_SIZE];
             if (pendingTransaction->tick == nextTick)
             {
+#ifndef NDEBUG
+                setText(dbgMsg, L"prepareNextTickTransactions(): comp tx for tick ");
+                appendNumber(dbgMsg, pendingTransaction->tick, FALSE);
+                appendText(dbgMsg, L" by entity ");
+                appendNumber(dbgMsg, pendingTransaction->sourcePublicKey.u64._0, FALSE);
+                addDebugMessage(dbgMsg);
+#endif
+
                 ACQUIRE(computorPendingTransactionsLock);
 
                 ASSERT(pendingTransaction->checkValidity());
@@ -4456,6 +4486,14 @@ static void prepareNextTickTransactions()
             Transaction* pendingTransaction = (Transaction*)&entityPendingTransactions[i * MAX_TRANSACTION_SIZE];
             if (pendingTransaction->tick == nextTick)
             {
+#ifndef NDEBUG
+                setText(dbgMsg, L"prepareNextTickTransactions(): entity tx for tick ");
+                appendNumber(dbgMsg, pendingTransaction->tick, FALSE);
+                appendText(dbgMsg, L" by entity ");
+                appendNumber(dbgMsg, pendingTransaction->sourcePublicKey.u64._0, FALSE);
+                addDebugMessage(dbgMsg);
+#endif
+
                 ACQUIRE(entityPendingTransactionsLock);
 
                 ASSERT(pendingTransaction->checkValidity());

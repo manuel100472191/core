@@ -601,6 +601,13 @@ static void peerReceiveAndTransmit(unsigned int i, unsigned int salt)
                                         ASSERT(requestQueueBufferHead < REQUEST_QUEUE_BUFFER_SIZE);
                                         ASSERT(requestQueueBufferHead + requestResponseHeader->size() < REQUEST_QUEUE_BUFFER_SIZE);
 
+#ifndef NDEBUG
+                                        if (requestResponseHeader->type() == BROADCAST_TRANSACTION)
+                                        {
+                                            addDebugMessage(L"Received tx message");
+                                        }
+#endif
+
                                         requestQueueElements[requestQueueElementHead].offset = requestQueueBufferHead;
                                         bs->CopyMem(&requestQueueBuffer[requestQueueBufferHead], peers[i].receiveBuffer, requestResponseHeader->size());
                                         requestQueueBufferHead += requestResponseHeader->size();
