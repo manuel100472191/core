@@ -21,7 +21,7 @@
 
 // Size of buffer for non-blocking save, this size will divided into ASYNC_FILE_IO_BLOCKING_MAX_QUEUE_ITEMS.
 // Can set by zeros to save memory and don't use non-block save
-static constexpr unsigned long long ASYNC_FILE_IO_WRITE_QUEUE_BUFFER_SIZE = 0;//8 * 1024 * 1024 * 1024ULL; // Set 0 if don't need non-blocking save
+static constexpr unsigned long long ASYNC_FILE_IO_WRITE_QUEUE_BUFFER_SIZE = 10 * 1024 * 1024 * 1024ULL; // Set 0 if don't need non-blocking save
 static constexpr int ASYNC_FILE_IO_BLOCKING_MAX_QUEUE_ITEMS_2FACTOR = 10;
 static constexpr int ASYNC_FILE_IO_MAX_QUEUE_ITEMS_2FACTOR = 4;
 static constexpr int ASYNC_FILE_IO_MAX_FILE_NAME = 64;
@@ -31,6 +31,22 @@ static constexpr int ASYNC_FILE_IO_MAX_QUEUE_ITEMS = (1ULL << ASYNC_FILE_IO_MAX_
 static EFI_FILE_PROTOCOL* root = NULL;
 class AsyncFileIO;
 static AsyncFileIO* gAsyncFileIO = NULL;
+
+// Returns true if str1 and str2 are identical, FALSE otherwise
+static bool isTextEqual(const CHAR16* str1, const CHAR16* str2)
+{
+    while (*str1 != 0 && *str2 != 0)
+    {
+        if (*str1 != *str2)
+        {
+            return false;
+        }
+        str1++;
+        str2++;
+    }
+
+    return (*str1 == *str2); // Both must reach '\0' to be identical
+}
 
 static long long getFileSize(CHAR16* fileName, CHAR16* directory = NULL)
 {
@@ -325,6 +341,7 @@ struct FileItem
     const unsigned char* mpConstBuffer;
     char mState;
     unsigned long long mReservedSize;
+    char mFileItemLock;
 
     void set(const CHAR16* fileName, unsigned long long fileSize, const CHAR16* directory)
     {
@@ -379,6 +396,29 @@ struct FileItem
         setState(stateChange);
     }
 
+    bool matchFileName(const CHAR16* fileName, const CHAR16* directory)
+    {
+        bool isMatched = false;
+        ACQUIRE(mFileItemLock);
+        if (isTextEqual(fileName, mFileName))
+        {
+            if (mHaveDirectory && NULL != directory)
+            {
+                if (isTextEqual(directory, mDirectory))
+                {
+                    isMatched = true;
+                }
+            }
+            else if (!mHaveDirectory && NULL == directory)
+            {
+                isMatched = true;
+            }
+        }
+
+        RELEASE(mFileItemLock);
+        return isMatched;
+    }
+
 };
 
 template<int maxItems>
@@ -400,6 +440,7 @@ public:
             mFileItems[i].mReservedSize = (1ULL << 63);
             mFileItems[i].mState = FileItem::kFree;
             mFileItems[i].mHaveDirectory = false;
+            mFileItems[i].mFileItemLock = 0;
         }
 
         // If external buffer is provided, allow schedule write file later
@@ -478,6 +519,33 @@ public:
         ATOMIC_AND64(this->mCurrentIdx, maxItems - 1);
 
         return 0;
+    }
+
+    // Wait for a specific file is complete. Note that it will not handle duplicated file name
+    bool checkFileComplete(const CHAR16* fileName, const CHAR16* directory = NULL)
+    {
+        bool isComplete = true;
+        int fileIndx = maxItems;
+        for (int i = 0; i < maxItems; i++)
+        {
+            FileItem& item = this->mFileItems[i];
+            if (item.matchFileName(fileName, directory))
+            {
+                fileIndx = i;
+            }
+        }
+
+        // Found the file. Wait for it to be processed
+        if (fileIndx < maxItems)
+        {
+            // File is still in waiting state
+            if (this->mFileItems[fileIndx].waitForProcess())
+            {
+                isComplete = false;
+            }
+        }
+
+        return isComplete;
     }
 };
 
@@ -688,6 +756,23 @@ public:
         return 0;
     }
 
+    int waitForWriting(const CHAR16* fileName, const CHAR16* directory = NULL)
+    {
+        // Mainthread. Flush the save queue immediately to avoid blocking the main thread.
+        if (isMainThread())
+        {
+            mFileWriteQueue.flushWrite();
+            return 0;
+        }
+
+        // Wait for the file is processed
+        while (!mFileWriteQueue.checkFileComplete(fileName, directory) && !mIsStop)
+        {
+            sleep(500);
+        }
+        return 0;
+    }
+
 private:
     EFI_MP_SERVICES_PROTOCOL* mpFileSystemMPServices;
     unsigned int mBSProcID;
@@ -880,6 +965,17 @@ static void flushAsyncFileIOBuffer()
         gAsyncFileIO->flush();
     }
 }
+
+// Wait for a non-blocking file is complete writing.
+static long long asyncWaitForWriting(const CHAR16* fileName, const CHAR16* directory = NULL)
+{
+    if (gAsyncFileIO)
+    {
+        return gAsyncFileIO->waitForWriting(fileName, directory);
+    }
+    return 0;
+}
+
 #pragma optimize("", on)
 
 // add epoch number as an extension to a filename
