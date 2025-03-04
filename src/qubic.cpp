@@ -849,6 +849,9 @@ static void processBroadcastTransaction(Peer* peer, RequestResponseHeader* heade
         KangarooTwelve(request, transactionSize - SIGNATURE_SIZE, digest, sizeof(digest));
         if (verify(request->sourcePublicKey.m256i_u8, digest, request->signaturePtr()))
         {
+#ifndef NDEBUG
+            CHAR16 dbgMsg[200];
+#endif
             if (header->isDejavuZero())
             {
                 enqueueResponse(NULL, header);
@@ -857,6 +860,13 @@ static void processBroadcastTransaction(Peer* peer, RequestResponseHeader* heade
             const int computorIndex = ::computorIndex(request->sourcePublicKey);
             if (computorIndex >= 0)
             {
+#ifndef NDEBUG
+                setText(dbgMsg, L"processBroadcastTransaction(): valid tx for tick ");
+                appendNumber(dbgMsg, request->tick, FALSE);
+                appendText(dbgMsg, L" by computor ");
+                appendNumber(dbgMsg, request->sourcePublicKey.u64._0, FALSE);
+                addDebugMessage(dbgMsg);
+#endif
                 ACQUIRE(computorPendingTransactionsLock);
 
                 const unsigned int offset = random(MAX_NUMBER_OF_PENDING_TRANSACTIONS_PER_COMPUTOR);
@@ -874,6 +884,13 @@ static void processBroadcastTransaction(Peer* peer, RequestResponseHeader* heade
                 const int spectrumIndex = ::spectrumIndex(request->sourcePublicKey);
                 if (spectrumIndex >= 0)
                 {
+#ifndef NDEBUG
+                    setText(dbgMsg, L"processBroadcastTransaction(): valid tx for tick ");
+                    appendNumber(dbgMsg, request->tick, FALSE);
+                    appendText(dbgMsg, L" by entity ");
+                    appendNumber(dbgMsg, request->sourcePublicKey.u64._0, FALSE);
+                    addDebugMessage(dbgMsg);
+#endif
                     ACQUIRE(entityPendingTransactionsLock);
 
                     // Pending transactions pool follows the rule: A transaction with a higher tick overwrites previous transaction from the same address.
@@ -896,6 +913,13 @@ static void processBroadcastTransaction(Peer* peer, RequestResponseHeader* heade
             if (request->tick == system.tick + 1
                 && ts.tickData[tickIndex].epoch == system.epoch)
             {
+#ifndef NDEBUG
+                setText(dbgMsg, L"processBroadcastTransaction(): branch ts, tick ");
+                appendNumber(dbgMsg, request->tick, FALSE);
+                appendText(dbgMsg, L" by entity ");
+                appendNumber(dbgMsg, request->sourcePublicKey.u64._0, FALSE);
+                addDebugMessage(dbgMsg);
+#endif
                 KangarooTwelve(request, transactionSize, digest, sizeof(digest));
                 auto* tsReqTickTransactionOffsets = ts.tickTransactionOffsets.getByTickIndex(tickIndex);
                 for (unsigned int i = 0; i < NUMBER_OF_TRANSACTIONS_PER_TICK; i++)
@@ -918,6 +942,14 @@ static void processBroadcastTransaction(Peer* peer, RequestResponseHeader* heade
                 }
             }
             ts.tickData.releaseLock();
+
+#ifndef NDEBUG
+            setText(dbgMsg, L"processBroadcastTransaction(): leaving for tick ");
+            appendNumber(dbgMsg, request->tick, FALSE);
+            appendText(dbgMsg, L" by ");
+            appendNumber(dbgMsg, request->sourcePublicKey.u64._0, FALSE);
+            addDebugMessage(dbgMsg);
+#endif
         }
     }
 }
