@@ -6694,6 +6694,9 @@ EFI_STATUS efi_main(EFI_HANDLE imageHandle, EFI_SYSTEM_TABLE* systemTable)
                 }*/
                 peerTcp4Protocol->Poll(peerTcp4Protocol);
 
+                addDebugMessage(L"m1");
+                printDebugMessages();
+
                 for (unsigned int i = 0; i < NUMBER_OF_OUTGOING_CONNECTIONS + NUMBER_OF_INCOMING_CONNECTIONS; i++)
                 {
                     // handle new connections
@@ -6751,13 +6754,23 @@ EFI_STATUS efi_main(EFI_HANDLE imageHandle, EFI_SYSTEM_TABLE* systemTable)
                             _InterlockedIncrement64(&numberOfDisseminatedRequests);
                         }
                     }
-
+                }
+                addDebugMessage(L"m2");
+                printDebugMessages();
+                for (unsigned int i = 0; i < NUMBER_OF_OUTGOING_CONNECTIONS + NUMBER_OF_INCOMING_CONNECTIONS; i++)
+                {
                     // receive and transmit on active connections
                     peerReceiveAndTransmit(i, salt);
-
+                }
+                addDebugMessage(L"m3");
+                printDebugMessages();
+                for (unsigned int i = 0; i < NUMBER_OF_OUTGOING_CONNECTIONS + NUMBER_OF_INCOMING_CONNECTIONS; i++)
+                {
                     // reconnect if this peer slot has no active connection
                     peerReconnectIfInactive(i, PORT);
                 }
+                addDebugMessage(L"m4");
+                printDebugMessages();
 
                 if (curTimeTick - systemDataSavingTick >= SYSTEM_DATA_SAVING_PERIOD * frequency / 1000)
                 {
