@@ -6694,8 +6694,8 @@ EFI_STATUS efi_main(EFI_HANDLE imageHandle, EFI_SYSTEM_TABLE* systemTable)
                 }*/
                 peerTcp4Protocol->Poll(peerTcp4Protocol);
 
-                //addDebugMessage(L"m1");
-                //printDebugMessages();
+                addDebugMessage(L"m1");
+                printDebugMessages();
 
                 for (unsigned int i = 0; i < NUMBER_OF_OUTGOING_CONNECTIONS + NUMBER_OF_INCOMING_CONNECTIONS; i++)
                 {
@@ -6755,8 +6755,8 @@ EFI_STATUS efi_main(EFI_HANDLE imageHandle, EFI_SYSTEM_TABLE* systemTable)
                         }
                     }
                 }
-                //addDebugMessage(L"m2");
-                //printDebugMessages();
+                addDebugMessage(L"m2");
+                printDebugMessages();
                 for (unsigned int i = 0; i < NUMBER_OF_OUTGOING_CONNECTIONS + NUMBER_OF_INCOMING_CONNECTIONS; i++)
                 {
                     // receive and transmit on active connections
