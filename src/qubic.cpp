@@ -6699,9 +6699,13 @@ EFI_STATUS efi_main(EFI_HANDLE imageHandle, EFI_SYSTEM_TABLE* systemTable)
 
                 for (unsigned int i = 0; i < NUMBER_OF_OUTGOING_CONNECTIONS + NUMBER_OF_INCOMING_CONNECTIONS; i++)
                 {
+                    addDebugMessage(L"m1.1");
+                    printDebugMessages();
                     // handle new connections
                     if (peerConnectionNewlyEstablished(i))
                     {
+                        addDebugMessage(L"m1.2");
+                        printDebugMessages();
                         // new connection established:
                         // prepare and send ExchangePublicPeers message
                         ExchangePublicPeers* request = (ExchangePublicPeers*)&peers[i].dataToTransmit[sizeof(RequestResponseHeader)];
@@ -6736,6 +6740,8 @@ EFI_STATUS efi_main(EFI_HANDLE imageHandle, EFI_SYSTEM_TABLE* systemTable)
                                 }
                             }
                         }
+                        addDebugMessage(L"m1.3");
+                        printDebugMessages();
 
                         RequestResponseHeader* requestHeader = (RequestResponseHeader*)peers[i].dataToTransmit;
                         requestHeader->setSize<sizeof(RequestResponseHeader) + sizeof(ExchangePublicPeers)>();
@@ -6753,6 +6759,8 @@ EFI_STATUS efi_main(EFI_HANDLE imageHandle, EFI_SYSTEM_TABLE* systemTable)
                             peers[i].dataToTransmitSize += requestedComputors.header.size();
                             _InterlockedIncrement64(&numberOfDisseminatedRequests);
                         }
+                        addDebugMessage(L"m1.4");
+                        printDebugMessages();
                     }
                 }
                 addDebugMessage(L"m2");
