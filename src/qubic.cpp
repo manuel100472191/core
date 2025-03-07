@@ -1639,8 +1639,8 @@ static void requestProcessor(void* ProcedureArgument)
                 break;
 #endif
 
-                default:
 #ifndef NDEBUG
+                default:
                     if (header->type() != 201)
                     {
                         CHAR16 dbgMsg[200];
