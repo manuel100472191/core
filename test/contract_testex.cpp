@@ -113,7 +113,6 @@ public:
         callSystemProcedure(TESTEXB_CONTRACT_INDEX, INITIALIZE);
         INIT_CONTRACT(QX);
         callSystemProcedure(QX_CONTRACT_INDEX, INITIALIZE);
-        qLogger::initLogging();
 
         // query QX fees
         callFunction(QX_CONTRACT_INDEX, 1, QX::Fees_input(), qxFees);
@@ -121,7 +120,6 @@ public:
 
     ~ContractTestingTestEx()
     {
-        qLogger::deinitLogging();
     }
 
     StateCheckerTestExampleA* getStateTestExampleA()
