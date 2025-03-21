@@ -246,7 +246,7 @@ public:
 #define TEXT_BUF_AS_NUMBER 0  // L"buff"
 #else
 #define TEXT_LOGS_AS_NUMBER 32370064710631532ULL // L"logs"
-#define TEXT_MAP_AS_NUMBER 481042694253ULL       // L"map"
+#define TEXT_MAP_AS_NUMBER 31525614010564720ULL       // L"pmap"
 #define TEXT_BUF_AS_NUMBER 28710885718818914ULL  // L"buff"
 #endif
     inline static VirtualMemory<char, TEXT_BUF_AS_NUMBER, TEXT_LOGS_AS_NUMBER, 10000000, 4> logBuffer;
