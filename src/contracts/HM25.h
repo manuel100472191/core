@@ -1,5 +1,25 @@
 using namespace QPI;
 
+constexpr unsigned long long MAX_PROJECTS = 1024;
+constexpr unsigned long long MAX_PROJECT_NAME_LENGTH = 64;
+constexpr unsigned long long MAX_PROJECT_DESCRIPTION_LENGTH = 1024;
+
+constexpr unsigned long long MAX_PROJECT_MILESTONES = 32;
+constexpr unsigned long long MAX_MILESTONE_NAME_LENGTH = 64;
+constexpr unsigned long long MAX_MILESTONE_DESCRIPTION_LENGTH = 1024;
+
+
+// Project related arrays
+Array<id, MAX_PROJECTS> mProjectCreator;
+// TODO project name and description
+Array<bit, MAX_PROJECTS> mProjectActive;
+
+// Milestones related arrays
+Array<uint64, MAX_PROJECTS*MAX_PROJECT_MILESTONES> mMilestoneAmount;
+Array<uint32, MAX_PROJECTS*MAX_PROJECT_MILESTONES> mMilestoneDueDate;
+Array<bit, MAX_PROJECTS*MAX_PROJECT_MILESTONES> mMilestonePaid;
+// TODO create milestone name and description arrays
+
 struct HM252
 {
 };
