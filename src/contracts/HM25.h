@@ -104,9 +104,9 @@ private:
 
     REGISTER_USER_FUNCTIONS_AND_PROCEDURES
         
-        REGISTER_USER_PROCEDURE(CreateProject, 1);
-        REGISTER_USER_PROCEDURE(Echo, 2);
-        REGISTER_USER_PROCEDURE(Burn, 3);
+        REGISTER_USER_PROCEDURE(Echo, 1);
+        REGISTER_USER_PROCEDURE(Burn, 2);
+        REGISTER_USER_PROCEDURE(CreateProject, 3);
 
         REGISTER_USER_FUNCTION(GetStats, 1);
     _
