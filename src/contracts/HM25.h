@@ -1,6 +1,6 @@
 using namespace QPI;
 
-constexpr unsigned long long MAX_PROJECTS = 1024;
+constexpr unsigned long long MAX_PROJECTS = 8;
 constexpr unsigned long long MAX_PROJECT_NAME_LENGTH = 64;
 constexpr unsigned long long MAX_PROJECT_DESCRIPTION_LENGTH = 1024;
 constexpr unsigned long long MAX_PROJECT_INVESTORS = 32;
@@ -29,12 +29,25 @@ public:
         uint64 projectIndex;
     };
 
+    struct GetProjects_input {};
+    struct GetProjects_output
+    {
+        uint64 numberOfProjects;
+        Array<id, MAX_PROJECTS> projectCreator;
+    };
+
     struct GetStats_input {};
     struct GetStats_output
     {
         uint64 numberOfEchoCalls;
         uint64 numberOfBurnCalls;
         Array<id, MAX_PROJECTS> projectCreator;
+    };
+
+    struct GetProjectNumbers_input {};
+    struct GetProjectNumbers_output
+    {
+        uint64 numberOfProjects;
     };
 
 private:
@@ -98,6 +111,15 @@ private:
         }
     _
 
+    PUBLIC_FUNCTION(GetProjects)
+        output.numberOfProjects = state.numberOfProjects;
+        output.projectCreator = state.mProjectCreator;
+    _
+
+    PUBLIC_FUNCTION(GetProjectNumbers)
+        output.numberOfProjects = state.numberOfProjects;
+    _
+
     PUBLIC_FUNCTION(GetStats)
         output.numberOfBurnCalls = state.numberOfBurnCalls;
         output.numberOfEchoCalls = state.numberOfEchoCalls;
@@ -111,6 +133,8 @@ private:
         REGISTER_USER_PROCEDURE(CreateProject, 3);
 
         REGISTER_USER_FUNCTION(GetStats, 1);
+        REGISTER_USER_FUNCTION(GetProjects, 2);
+        REGISTER_USER_FUNCTION(GetProjectNumbers, 3);
     _
 
     INITIALIZE
@@ -121,5 +145,6 @@ private:
             state.mProjectCreator.set(i, NULL_ID);
             state.mProjectActive.set(i, 0);
         }
+        state.numberOfProjects = 0;
     _
 };
