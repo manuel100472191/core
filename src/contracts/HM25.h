@@ -26,7 +26,7 @@ public:
 
     struct CreateProject_input {};
     struct CreateProject_output {
-        uint32 projectIndex;
+        uint64 projectIndex;
     };
 
     struct GetStats_input {};
@@ -34,6 +34,7 @@ public:
     {
         uint64 numberOfEchoCalls;
         uint64 numberOfBurnCalls;
+        Array<id, MAX_PROJECTS> projectCreator;
     };
 
 private:
@@ -100,6 +101,7 @@ private:
     PUBLIC_FUNCTION(GetStats)
         output.numberOfBurnCalls = state.numberOfBurnCalls;
         output.numberOfEchoCalls = state.numberOfEchoCalls;
+        output.projectCreator = state.mProjectCreator;
     _
 
     REGISTER_USER_FUNCTIONS_AND_PROCEDURES
