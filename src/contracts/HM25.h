@@ -10,6 +10,8 @@ constexpr unsigned long long MAX_MILESTONE_NAME_LENGTH = 64;
 constexpr unsigned long long MAX_MILESTONE_DESCRIPTION_LENGTH = 1024;
 constexpr unsigned long long MAX_INVESTORS_PER_MILESTONE = 32;
 
+constexpr unsigned long long MILESTONE_VALIDATION_THRESHOLD = 66;
+
 
 struct HM252
 {
@@ -55,6 +57,33 @@ public:
     struct CreateInvestment_locals {
         uint64 investmentIndex;
     }
+    
+    struct GetInvestorIndex_input {
+        uint64 projectIndex;
+        uint64 milestoneIndex;
+        id investorID;
+    };
+    
+    struct GetInvestorIndex_output {
+        sint64 index; // Use signed integer to indicate not found with -1
+    };
+    
+    struct GetInvestorIndex_locals {
+        uint64 startIndex;
+        uint64 endIndex;
+        uint64 i;
+    };
+    struct VerifyMilestone_input {
+        uint64 projectIndex;
+        uint64 milestoneIndex;
+    };
+
+    struct VerifyMilestone_output {};
+
+    struct VerifyMilestone_locals {
+        uint64 investmentAmount;
+        uint64 voteWeight;
+    };
 
     struct GetProjects_input {};
     struct GetProjects_output
@@ -99,7 +128,9 @@ private:
     
     // Investment related arrays
     Array<id, MAX_PROJECTS*MAX_PROJECT_MILESTONES*MAX_INVESTORS_PER_MILESTONE> mMilestoneInvestor; // Saves the investor id 
-    Array<id, MAX_PROJECTS*MAX_PROJECT_MILESTONES*MAX_INVESTORS_PER_MILESTONE> mMilestoneAmountPerInvestor; // Amount related to the investor 
+    Array<id, MAX_PROJECTS*MAX_PROJECT_MILESTONES*MAX_INVESTORS_PER_MILESTONE> mMilestoneAmountPerInvestor; // Amount related to the investor
+    Array<uint64, MAX_PROJECTS*MAX_PROJECT_MILESTONES> mMilestoneTotalInvestment;
+    Array<uint64, MAX_PROJECTS*MAX_PROJECT_MILESTONES> mMilestonePercentageValidated;
     Array<uint64, MAX_PROJECTS*MAX_PROJECT_MILESTONES> mNumberOfInvestorsPerMilestone;
 
     /**
@@ -131,7 +162,7 @@ private:
     /**
      * @output milestoneIndex
      */
-    PUBLIC_PROCEDURE(CreateMilestone)
+    PUBLIC_PROCEDURE_WITH_LOCALS(CreateMilestone)
         if (qpi.invocator() != qpi.originator())
         {
             // return any leftover
@@ -151,12 +182,16 @@ private:
         state.mNumberOfInvestorsPerMilestone.set(locals.currentMilestoneIndex, 0);
         // Set the milestone as not achieved
         state.mMilestoneAchieved.set(locals.currentMilestoneIndex, 0);
+        // Set the total investment to 0
+        state.mMilestoneTotalInvestment.set(locals.currentMilestoneIndex, 0);
+        // Set the percentage validated to 0
+        state.mMilestonePercentageValidated.set(locals.currentMilestoneIndex, 0);
     _
     
     /**
      * @output investmentIndex
      */
-    PUBLIC_PROCEDURE(CreateInvestment)
+    PUBLIC_PROCEDURE_WITH_LOCALS(CreateInvestment)
         if (qpi.invocator() != qpi.originator())
         {
             // return any leftover
@@ -169,7 +204,73 @@ private:
         state.mMilestoneInvestor.set(locals.investmentIndex, qpi.invocator());
         state.mMilestoneAmountPerInvestor.set(locals.investmentIndex, input.amount);
         state.mNumberOfInvestorsPerMilestone.set(input.projectIndex*MAX_PROJECT_MILESTONES + input.milestoneIndex, state.mNumberOfInvestorsPerMilestone.get(input.projectIndex*MAX_PROJECT_MILESTONES + input.milestoneIndex) + 1);
+        state.mMilestoneTotalInvestment.set(input.projectIndex*MAX_PROJECT_MILESTONES + input.milestoneIndex, state.mMilestoneTotalInvestment.get(input.projectIndex*MAX_PROJECT_MILESTONES + input.milestoneIndex) + input.amount);
         output.investmentIndex = locals.investmentIndex;
+    _
+
+    /**
+     * @output index
+     */
+    PUBLIC_FUNCTION_WITH_LOCALS(GetInvestorIndex)
+    // Calculate the start and end indices for the milestone investors
+    locals.startIndex = input.projectIndex * MAX_PROJECT_MILESTONES * MAX_INVESTORS_PER_MILESTONE + input.milestoneIndex * MAX_INVESTORS_PER_MILESTONE;
+    locals.endIndex = locals.startIndex + MAX_INVESTORS_PER_MILESTONE;
+
+    // Initialize the output index to -1 (not found)
+    output.index = -1;
+
+    // Iterate through the milestone investors
+    for (locals.i = locals.startIndex; locals.i < locals.endIndex; ++locals.i) {
+        if (state.mMilestoneInvestor.get(locals.i) == input.investorID) {
+            output.index = locals.i;
+            break;
+        }
+    }
+    _
+
+    /**
+     * Vote for a milestone to be verified
+     */
+    PUBLIC_PROCEDURE_WITH_LOCALS(VerifyMilestone)
+        if (qpi.invocator() != qpi.originator())
+        {
+            // return any leftover
+            qpi.transfer(qpi.invocator(), qpi.invocationReward());
+            return;
+        }
+        // If already closed, return
+        if (state.mMilestoneAchieved.get(input.projectIndex*MAX_PROJECT_MILESTONES + input.milestoneIndex) == 1)
+        {
+            // return any leftover
+            qpi.transfer(qpi.invocator(), qpi.invocationReward());
+            return;
+        }
+
+        // Get investor index
+        GetInvestorIndex_input getInvestorIndexInput;
+        GetInvestorIndex_output getInvestorIndexOutput;
+
+        getInvestorIndexInput.projectIndex = input.projectIndex;
+        getInvestorIndexInput.milestoneIndex = input.milestoneIndex;
+        getInvestorIndexInput.investorID = qpi.invocator();
+
+        GetInvestorIndex(getInvestorIndexInput, getInvestorIndexOutput);
+        if (getInvestorIndexOutput.index == -1)
+        {
+            // return any leftover
+            qpi.transfer(qpi.invocator(), qpi.invocationReward());
+            return;
+        }
+        locals.investmentAmount = state.mMilestoneAmountPerInvestor.get(getInvestorIndexOutput.index);
+        locals.voteWeight = locals.investmentAmount * 100 / state.mMilestoneTotalInvestment.get(input.projectIndex*MAX_PROJECT_MILESTONES + input.milestoneIndex);
+        state.mMilestonePercentageValidated.set(input.projectIndex*MAX_PROJECT_MILESTONES + input.milestoneIndex, state.mMilestonePercentageValidated.get(input.projectIndex*MAX_PROJECT_MILESTONES + input.milestoneIndex) + locals.voteWeight);
+        if (state.mMilestonePercentageValidated.get(input.projectIndex*MAX_PROJECT_MILESTONES + input.milestoneIndex) >= MILESTONE_VALIDATION_THRESHOLD)
+        {
+            // Set milestone as completed and transfer money in escrow to project creator
+            state.mMilestoneAchieved.set(input.projectIndex*MAX_PROJECT_MILESTONES + input.milestoneIndex, 1);
+            qpi.transfer(state.mProjectCreator.get(input.projectIndex), state.mMilestoneTotalInvestment.get(input.projectIndex*MAX_PROJECT_MILESTONES + input.milestoneIndex));
+        }   
+    _
 
     /**
     Send back the invocation amount
