@@ -149,9 +149,6 @@ private:
         REGISTER_USER_PROCEDURE(Echo, 1);
         REGISTER_USER_PROCEDURE(Burn, 2);
         REGISTER_USER_PROCEDURE(CreateProject, 3);
-        REGISTER_USER_PROCEDURE(CreateMilestone, 4);
-        REGISTER_USER_PROCEDURE(CreateInvestment, 5);
-        REGISTER_USER_PROCEDURE(VerifyMilestone, 6);
 
         REGISTER_USER_FUNCTION(GetStats, 1);
         REGISTER_USER_FUNCTION(GetProjects, 2);
