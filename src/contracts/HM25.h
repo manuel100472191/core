@@ -57,22 +57,6 @@ public:
     struct CreateInvestment_locals {
         uint64 investmentIndex;
     }
-    
-    struct GetInvestorIndex_input {
-        uint64 projectIndex;
-        uint64 milestoneIndex;
-        id investorID;
-    };
-    
-    struct GetInvestorIndex_output {
-        sint64 index; // Use signed integer to indicate not found with -1
-    };
-    
-    struct GetInvestorIndex_locals {
-        uint64 startIndex;
-        uint64 endIndex;
-        uint64 i;
-    };
     struct VerifyMilestone_input {
         uint64 projectIndex;
         uint64 milestoneIndex;
@@ -82,6 +66,10 @@ public:
 
     struct VerifyMilestone_locals {
         uint64 investmentAmount;
+        uint64 startIndex;
+        uint64 endIndex;
+        uint64 i;
+        sint64 index;
         uint64 voteWeight;
     };
 
@@ -209,26 +197,6 @@ private:
     _
 
     /**
-     * @output index
-     */
-    PUBLIC_FUNCTION_WITH_LOCALS(GetInvestorIndex)
-    // Calculate the start and end indices for the milestone investors
-    locals.startIndex = input.projectIndex * MAX_PROJECT_MILESTONES * MAX_INVESTORS_PER_MILESTONE + input.milestoneIndex * MAX_INVESTORS_PER_MILESTONE;
-    locals.endIndex = locals.startIndex + MAX_INVESTORS_PER_MILESTONE;
-
-    // Initialize the output index to -1 (not found)
-    output.index = -1;
-
-    // Iterate through the milestone investors
-    for (locals.i = locals.startIndex; locals.i < locals.endIndex; ++locals.i) {
-        if (state.mMilestoneInvestor.get(locals.i) == input.investorID) {
-            output.index = locals.i;
-            break;
-        }
-    }
-    _
-
-    /**
      * Vote for a milestone to be verified
      */
     PUBLIC_PROCEDURE_WITH_LOCALS(VerifyMilestone)
@@ -246,15 +214,21 @@ private:
             return;
         }
 
-        // Get investor index
-        GetInvestorIndex_input getInvestorIndexInput;
-        GetInvestorIndex_output getInvestorIndexOutput;
+        // Calculate the start and end indices for the milestone investors
+        locals.startIndex = input.projectIndex * MAX_PROJECT_MILESTONES * MAX_INVESTORS_PER_MILESTONE + input.milestoneIndex * MAX_INVESTORS_PER_MILESTONE;
+        locals.endIndex = locals.startIndex + MAX_INVESTORS_PER_MILESTONE;
 
-        getInvestorIndexInput.projectIndex = input.projectIndex;
-        getInvestorIndexInput.milestoneIndex = input.milestoneIndex;
-        getInvestorIndexInput.investorID = qpi.invocator();
+        // Initialize the output index to -1 (not found)
+        locals.index = -1;
 
-        GetInvestorIndex(getInvestorIndexInput, getInvestorIndexOutput);
+        // Iterate through the milestone investors
+        for (locals.i = locals.startIndex; locals.i < locals.endIndex; ++locals.i) {
+            if (state.mMilestoneInvestor.get(locals.i) == qpi.invocator()) {
+                locals.index = locals.i;
+                break;
+            }
+        }
+
         if (getInvestorIndexOutput.index == -1)
         {
             // return any leftover
@@ -316,6 +290,7 @@ private:
         REGISTER_USER_PROCEDURE(CreateProject, 3);
         REGISTER_USER_PROCEDURE(CreateMilestone, 4);
         REGISTER_USER_PROCEDURE(CreateInvestment, 5);
+        REGISTER_USER_PROCEDURE(VerifyMilestone, 6);
 
         REGISTER_USER_FUNCTION(GetStats, 1);
         REGISTER_USER_FUNCTION(GetProjects, 2);
