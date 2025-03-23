@@ -211,7 +211,7 @@ private:
     /**
      * @output index
      */
-    PUBLIC_FUNCTION_WITH_LOCALS(GetInvestorIndex)
+    PRIVATE_FUNCTION_WITH_LOCALS(GetInvestorIndex)
     // Calculate the start and end indices for the milestone investors
     locals.startIndex = input.projectIndex * MAX_PROJECT_MILESTONES * MAX_INVESTORS_PER_MILESTONE + input.milestoneIndex * MAX_INVESTORS_PER_MILESTONE;
     locals.endIndex = locals.startIndex + MAX_INVESTORS_PER_MILESTONE;
@@ -316,6 +316,7 @@ private:
         REGISTER_USER_PROCEDURE(CreateProject, 3);
         REGISTER_USER_PROCEDURE(CreateMilestone, 4);
         REGISTER_USER_PROCEDURE(CreateInvestment, 5);
+        REGISTER_USER_PROCEDURE(VerifyMilestone, 6);
 
         REGISTER_USER_FUNCTION(GetStats, 1);
         REGISTER_USER_FUNCTION(GetProjects, 2);
