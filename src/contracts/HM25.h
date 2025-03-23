@@ -29,6 +29,13 @@ public:
         uint64 projectIndex;
     };
 
+    struct CreateMilestone_input {
+        uint64 projectIndex;
+    };
+    struct CreateMilestone_output {
+        uint64 milestoneIndex;
+    };
+
     struct GetProjects_input {};
     struct GetProjects_output
     {
@@ -62,6 +69,9 @@ private:
     // Project ->  milestones -> { id -> amounts }
 
     // Milestones related arrays
+    Array<id, MAX_PROJECTS*MAX_PROJECT_MILESTONES> mMilestoneCreator;
+    Array<id, MAX_PROJECTS> mNumberOfMilestonesPerProject;
+
     Array<id, MAX_PROJECTS*MAX_PROJECT_MILESTONES*MAX_INVESTORS_PER_MILESTONE> mMilestoneInvestor; // Saves the investor id 
     Array<id, MAX_PROJECTS*MAX_PROJECT_MILESTONES*MAX_INVESTORS_PER_MILESTONE> mMilestoneAmountPerInvestor; // Amount related to the investor 
 
@@ -87,6 +97,28 @@ private:
         state.mProjectCreator.set(state.numberOfProjects, qpi.invocator());
         output.projectIndex = state.numberOfProjects;
         state.numberOfProjects++;
+        // Set its number of milestones to 0
+        state.mNumberOfMilestonesPerProject.set(state.numberOfProjects, 0);
+    _
+
+    /**
+     * @output milestoneIndex
+     */
+    PUBLIC_PROCEDURE(CreateMilestone)
+        if (qpi.invocator() != qpi.originator())
+        {
+            // return any leftover
+            qpi.transfer(qpi.invocator(), qpi.invocationReward());
+            return;
+        }
+        if (state.mNumberOfMilestonesPerProject.get(input.projectIndex) >= MAX_PROJECT_MILESTONES) {
+            qpi.transfer(qpi.invocator(), qpi.invocationReward());
+            return;
+        }
+        // Save the creator
+        state.mMilestoneCreator.set(input.projectIndex*MAX_PROJECT_MILESTONES + state.mNumberOfMilestonesPerProject.get(input.projectIndex), qpi.invocator());
+        output.milestoneIndex = state.mNumberOfMilestonesPerProject.get(input.projectIndex);
+        state.mNumberOfMilestonesPerProject.set(input.projectIndex, state.mNumberOfMilestonesPerProject.get(input.projectIndex) + 1);
     _
 
     /**
