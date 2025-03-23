@@ -149,6 +149,8 @@ private:
         state.mNumberOfMilestonesPerProject.set(input.projectIndex, state.mNumberOfMilestonesPerProject.get(input.projectIndex) + 1);
         // Set the number of investors of the created milestone to 0
         state.mNumberOfInvestorsPerMilestone.set(locals.currentMilestoneIndex, 0);
+        // Set the milestone as not achieved
+        state.mMilestoneAchieved.set(locals.currentMilestoneIndex, 0);
     _
     
     /**
@@ -168,7 +170,6 @@ private:
         state.mMilestoneAmountPerInvestor.set(locals.investmentIndex, input.amount);
         state.mNumberOfInvestorsPerMilestone.set(input.projectIndex*MAX_PROJECT_MILESTONES + input.milestoneIndex, state.mNumberOfInvestorsPerMilestone.get(input.projectIndex*MAX_PROJECT_MILESTONES + input.milestoneIndex) + 1);
         output.investmentIndex = locals.investmentIndex;
-    _
 
     /**
     Send back the invocation amount
