@@ -137,7 +137,7 @@ private:
 
     PUBLIC_FUNCTION(GetProjectNumbers)
         output.numberOfProjects = state.numberOfProjects;
-        output.name = state.mProjectName.get(0);
+        output.title = state.mProjectName.get(0);
     _
 
     PUBLIC_FUNCTION(GetStats)
